@@ -38,7 +38,7 @@
 @implementation EGORefreshTableHeaderView
 
 @synthesize delegate=_delegate;
-
+@synthesize pullingMessage = _pullingMessage;
 
 - (id)initWithFrame:(CGRect)frame arrowImageName:(NSString *)arrow textColor:(UIColor *)textColor  {
     if((self = [super initWithFrame:frame])) {
@@ -92,7 +92,6 @@
 		
 		
 		[self setState:EGOOPullRefreshNormal];
-		
     }
 	
     return self;
@@ -117,7 +116,12 @@
 		[dateFormatter setDateStyle:NSDateFormatterShortStyle];
 		[dateFormatter setTimeStyle:NSDateFormatterShortStyle];
 
-		_lastUpdatedLabel.text = [NSString stringWithFormat:@"Last Updated: %@", [dateFormatter stringFromDate:date]];
+        NSString *format = NSLocalizedString(@"Last Updated: %@", @"Last Updated: %@");
+        if ([format respondsToSelector:@selector(applicationLocale)]) {
+            format = [format performSelector:@selector(applicationLocale)];
+        }
+        _lastUpdatedLabel.text = [NSString stringWithFormat:format, [dateFormatter stringFromDate:date]];
+        
 		[[NSUserDefaults standardUserDefaults] setObject:_lastUpdatedLabel.text forKey:@"EGORefreshTableView_LastRefresh"];
 		[[NSUserDefaults standardUserDefaults] synchronize];
 		
@@ -135,6 +139,9 @@
 		case EGOOPullRefreshPulling:
 			
 			_statusLabel.text = NSLocalizedString(@"Release to refresh...", @"Release to refresh status");
+            if ([_statusLabel.text respondsToSelector:@selector(applicationLocale)]) {
+                _statusLabel.text = [_statusLabel.text performSelector:@selector(applicationLocale)];
+            }
 			[CATransaction begin];
 			[CATransaction setAnimationDuration:FLIP_ANIMATION_DURATION];
 			_arrowImage.transform = CATransform3DMakeRotation((M_PI / 180.0) * 180.0f, 0.0f, 0.0f, 1.0f);
@@ -150,7 +157,14 @@
 				[CATransaction commit];
 			}
 			
+            if (self.pullingMessage.length != 0) {
+                _statusLabel.text = self.pullingMessage;
+            } else {
 			_statusLabel.text = NSLocalizedString(@"Pull down to refresh...", @"Pull down to refresh status");
+                if ([_statusLabel.text respondsToSelector:@selector(applicationLocale)]) {
+                    _statusLabel.text = [_statusLabel.text performSelector:@selector(applicationLocale)];
+                }
+            }
 			[_activityView stopAnimating];
 			[CATransaction begin];
 			[CATransaction setValue:(id)kCFBooleanTrue forKey:kCATransactionDisableActions]; 
@@ -164,6 +178,9 @@
 		case EGOOPullRefreshLoading:
 			
 			_statusLabel.text = NSLocalizedString(@"Loading...", @"Loading Status");
+            if ([_statusLabel.text respondsToSelector:@selector(applicationLocale)]) {
+                _statusLabel.text = [_statusLabel.text performSelector:@selector(applicationLocale)];
+            }
 			[_activityView startAnimating];
 			[CATransaction begin];
 			[CATransaction setValue:(id)kCFBooleanTrue forKey:kCATransactionDisableActions]; 
